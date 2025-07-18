@@ -8,7 +8,7 @@ import adoptionController from './controllers/adoptionController.js';
 import userController from './controllers/userController.js';
 import { swaggerUiServe, swaggerUiSetup } from './swagger.js';
 
-mongoose.connect(process.env.MONGO_URL)
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log('Conectado a MongoDB Atlas'))
 .catch(err => console.error('Error de conexión a MongoDB:', err));
 
