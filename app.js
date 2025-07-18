@@ -32,5 +32,4 @@ const PORT = 3001
 app.listen(PORT, _ => {
     console.log(`Servidor corriendo en el puerto ${PORT}`)
     console.log(`🚀 Servidor corriendo en: http://localhost:${PORT}/api-docs/swagger`);
-
 })
