@@ -1,0 +1,15 @@
+# Node modules
+node_modules/
+
+# Archivos de datos
+/data/*.json
+
+# Archivos de logs
+*.log
+
+# Entorno
+.env
+
+# Otros
+.DS_Store
+Thumbs.db 
