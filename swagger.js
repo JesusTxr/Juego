@@ -10,6 +10,10 @@ const swaggerDefinition = {
   },
   servers: [
     {
+      url: 'https://juego-production-6921.up.railway.app/api',
+      description: 'Servidor en Railway'
+    },
+    {
       url: 'http://localhost:3001/api',
       description: 'Servidor local'
     }
