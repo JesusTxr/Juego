@@ -39,3 +39,4 @@ const swaggerSpec = swaggerJSDoc(options);
 
 export const swaggerUiServe = swaggerUi.serve;
 export const swaggerUiSetup = swaggerUi.setup(swaggerSpec); 
+export { swaggerSpec }; // 👈 agrega esta línea

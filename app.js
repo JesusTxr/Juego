@@ -7,6 +7,13 @@ import petController from './controllers/petController.js';
 import adoptionController from './controllers/adoptionController.js';
 import userController from './controllers/userController.js';
 import { swaggerUiServe, swaggerUiSetup } from './swagger.js';
+import { swaggerSpec } from './swagger.js';
+
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 import cors from 'cors';
 
 mongoose.connect(process.env.MONGODB_URI)
