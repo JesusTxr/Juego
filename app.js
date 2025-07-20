@@ -15,7 +15,12 @@ mongoose.connect(process.env.MONGODB_URI)
 .catch(err => console.error('Error de conexión a MongoDB:', err));
 
 const app = express()
-app.use(cors());
+// Configuración de CORS permisiva
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json())
 app.use('/api', heroController)
 app.use('/api', petController)
