@@ -7,6 +7,7 @@ import petController from './controllers/petController.js';
 import adoptionController from './controllers/adoptionController.js';
 import userController from './controllers/userController.js';
 import { swaggerUiServe, swaggerUiSetup } from './swagger.js';
+import { swaggerSpec } from './swagger.js';
 import cors from 'cors';
 
 mongoose.connect(process.env.MONGODB_URI)
@@ -35,6 +36,13 @@ app.use('/api', petController)
 app.use('/api', adoptionController)
 app.use('/api/users', userController);
 app.use('/api-docs', swaggerUiServe, swaggerUiSetup);
+
+// Endpoint para obtener el archivo JSON de Swagger
+app.get('/api-docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
