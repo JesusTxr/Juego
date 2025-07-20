@@ -10,7 +10,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'https://juego-production-6921.up.railway.app/api',
+      url: 'https://juego-production-52a1.up.railway.app/api',
       description: 'Servidor en Railway'
     },
     {
