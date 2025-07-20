@@ -32,7 +32,12 @@ const swaggerDefinition = {
 
 const options = {
   swaggerDefinition,
-  apis: ['./controllers/*.js'], // Buscará los comentarios JSDoc en los controladores
+  apis: [
+    './controllers/userController.js',
+    './controllers/heroController.js',
+    './controllers/petController.js',
+    './controllers/adoptionController.js'
+  ], // Solo los controladores principales
 };
 
 const swaggerSpec = swaggerJSDoc(options);
