@@ -221,10 +221,13 @@ router.delete('/pets/:id', authMiddleware, async (req, res) => {
  *         description: Mascota no encontrada
  */
 // GET /pets/:id/status
-router.get('/pets/:id/status', async (req, res) => {
+router.get('/pets/:id/status', authMiddleware, async (req, res) => {
     try {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para ver esta mascota' });
+        }
         petService.aplicarPenalizacionEnfermedadSiEsNecesario(pet);
         await petService.updatePet(pet.id, pet);
         res.json(limpiarMascota(pet));
@@ -267,13 +270,16 @@ router.get('/pets/:id/status', async (req, res) => {
  *         description: Mascota no encontrada
  */
 // POST /pets/:id/activity
-router.post('/pets/:id/activity', async (req, res) => {
+router.post('/pets/:id/activity', authMiddleware, async (req, res) => {
     const { actividad } = req.body;
     if (!actividad) return res.status(400).json({ error: 'Actividad requerida' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        }
         petService.aplicarActividad(pet, actividad);
         await petService.updatePet(pet.id, pet);
         res.json(limpiarMascota(pet));
@@ -324,13 +330,16 @@ router.post('/pets/:id/activity', async (req, res) => {
  *         description: Mascota no encontrada
  */
 // POST /pets/:id/item
-router.post('/pets/:id/item', async (req, res) => {
+router.post('/pets/:id/item', authMiddleware, async (req, res) => {
     const { item } = req.body;
     if (!item) return res.status(400).json({ error: 'Ítem requerido' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        }
         
         // Convertir el objeto item a string
         const itemString = `${item.nombre} - ${item.tipo} - ${item.efecto}`;
@@ -368,10 +377,13 @@ router.post('/pets/:id/item', async (req, res) => {
  *         description: Mascota no encontrada
  */
 // ENDPOINT: Ver ítems
-router.get('/pets/:id/items', async (req, res) => {
+router.get('/pets/:id/items', authMiddleware, async (req, res) => {
     try {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para ver los ítems de esta mascota' });
+        }
         res.json({ items: pet.items });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -412,13 +424,16 @@ router.get('/pets/:id/items', async (req, res) => {
  *         description: Mascota no encontrada
  */
 // POST /pets/:id/sick
-router.post('/pets/:id/sick', async (req, res) => {
+router.post('/pets/:id/sick', authMiddleware, async (req, res) => {
     const { enfermedad } = req.body;
     if (!enfermedad) return res.status(400).json({ error: 'Enfermedad requerida' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        }
         if (!pet.enfermedades.includes(enfermedad)) {
             pet.enfermedades.push(enfermedad);
         }
@@ -464,13 +479,16 @@ router.post('/pets/:id/sick', async (req, res) => {
  *         description: Mascota no encontrada
  */
 // POST /pets/:id/cure
-router.post('/pets/:id/cure', async (req, res) => {
+router.post('/pets/:id/cure', authMiddleware, async (req, res) => {
     const { enfermedad } = req.body;
     if (!enfermedad) return res.status(400).json({ error: 'Enfermedad requerida' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        }
         pet.enfermedades = pet.enfermedades.filter(e => e !== enfermedad);
         petService.actualizarPersonalidad(pet);
         await petService.updatePet(pet.id, pet);
@@ -514,13 +532,16 @@ router.post('/pets/:id/cure', async (req, res) => {
  *         description: Mascota no encontrada
  */
 // PATCH /pets/:id/personality
-router.patch('/pets/:id/personality', async (req, res) => {
+router.patch('/pets/:id/personality', authMiddleware, async (req, res) => {
     const { personalidad } = req.body;
     if (!personalidad) return res.status(400).json({ error: 'Personalidad requerida' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        }
         pet.personalidad = personalidad;
         await petService.updatePet(pet.id, pet);
         res.json(limpiarMascota(pet));
