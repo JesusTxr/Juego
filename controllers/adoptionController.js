@@ -126,7 +126,11 @@ router.post('/adoptions', authMiddleware, [
         const allAdoptions = await adoptionService.getAllAdoptions();
         const completeAdoption = allAdoptions.find(a => a.id === addedAdoption.id);
         
-        res.status(201).json(limpiarAdopcion(completeAdoption));
+        if (completeAdoption) {
+            res.status(201).json(limpiarAdopcion(completeAdoption));
+        } else {
+            res.status(201).json({ message: 'Adopción creada, pero no se pudo obtener la información completa.' });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
