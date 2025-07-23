@@ -102,7 +102,10 @@ router.post('/pets', authMiddleware, [
         const { name, animal, superpower } = req.body;
         const petData = { name, animal, superpower, superheroeId: req.user.id, id: nextId };
         const addedPet = await petService.addPet(petData);
-        res.status(201).json(limpiarMascota(addedPet));
+        // Incluir el _id en la respuesta junto con los demás datos
+        const obj = addedPet.toObject ? addedPet.toObject() : addedPet;
+        const { __v, ...rest } = obj;
+        res.status(201).json(rest);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
