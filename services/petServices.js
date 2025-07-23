@@ -1,6 +1,7 @@
 import petRepository from '../repositories/petRepository.js';
 import AdoptionRepository from '../repositories/adoptionRepository.js';
 import Pet from '../models/petModel.js';
+import mongoose from 'mongoose';
 
 async function getAllPets() {
     return await petRepository.getPets();
@@ -184,7 +185,12 @@ async function deletePet(id) {
 
 // Exportar nuevas funciones para uso futuro
 async function getPetById(id) {
-    // Buscar por id numérico
+    // Si el id es un ObjectId válido, buscar por _id
+    if (mongoose.Types.ObjectId.isValid(id)) {
+        const pet = await Pet.findById(id);
+        if (pet) return pet;
+    }
+    // Si no, buscar por id numérico
     return await Pet.findOne({ id: parseInt(id) });
 }
 
