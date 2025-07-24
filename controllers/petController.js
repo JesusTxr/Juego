@@ -100,7 +100,7 @@ router.post('/pets', authMiddleware, [
         const lastPet = await Pet.findOne().sort({ id: -1 });
         const nextId = lastPet && lastPet.id ? lastPet.id + 1 : 1;
         const { name, animal, superpower } = req.body;
-        const petData = { name, animal, superpower, superheroeId: req.user.id, id: nextId };
+        const petData = { name, animal, superpower, superheroeId: req.user.id, ownerId: req.user.id, id: nextId };
         const addedPet = await petService.addPet(petData);
         // Incluir el _id en la respuesta junto con los demás datos
         const obj = addedPet.toObject ? addedPet.toObject() : addedPet;
@@ -231,7 +231,7 @@ router.get('/pets/:id/status', authMiddleware, async (req, res) => {
     try {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        if (!pet.ownerId || pet.ownerId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para ver esta mascota' });
         }
         petService.aplicarPenalizacionEnfermedadSiEsNecesario(pet);
