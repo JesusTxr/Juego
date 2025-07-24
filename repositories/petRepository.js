@@ -1,5 +1,4 @@
 import Pet from '../models/petModel.js';
-import fs from 'fs-extra';
 
 async function getPets() {
     try {
@@ -14,7 +13,6 @@ async function savePet(petData) {
     try {
         const pet = new Pet(petData);
         const saved = await pet.save();
-        await syncPetsJson();
         return saved;
     } catch (error) {
         console.error('Error guardando la mascota:', error);
@@ -28,18 +26,11 @@ async function savePets(petsArray) {
         for (const petData of petsArray) {
             await Pet.updateOne({ id: petData.id }, petData, { upsert: true });
         }
-        await syncPetsJson();
         return true;
     } catch (error) {
         console.error('Error guardando el arreglo de mascotas:', error);
         throw error;
     }
-}
-
-// Sincroniza el archivo data/pets.json con la base de datos
-async function syncPetsJson() {
-    const allPets = await Pet.find();
-    await fs.writeJson('./data/pets.json', allPets, { spaces: 2 });
 }
 
 export default {
