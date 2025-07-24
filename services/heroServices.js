@@ -68,11 +68,17 @@ async function faceVillain(heroId, villain) {
   return `${hero.alias} enfrenta a ${villain}`;
 }
 
+async function getHeroById(id) {
+  const heroes = await heroRepository.getHeroes();
+  return heroes.find(hero => hero.id === parseInt(id));
+}
+
 export default {
   getAllHeroes,
   addHero,
   updateHero,
   deleteHero,
   findHeroesByCity,
-  faceVillain
+  faceVillain,
+  getHeroById
 };
