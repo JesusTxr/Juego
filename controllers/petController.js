@@ -198,7 +198,8 @@ router.delete('/pets/:id', authMiddleware, async (req, res) => {
     try {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para eliminar esta mascota' });
         }
         const result = await petService.deletePet(req.params.id);
