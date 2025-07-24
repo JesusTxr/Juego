@@ -12,6 +12,7 @@ async function getAllAdoptions() {
         const pet = pets.find(p => p.id === parseInt(a.petId));
         return {
             ...a,
+            id: parseInt(a.id), // Forzar id numérico
             hero: hero || null,
             pet: pet || null
         };
