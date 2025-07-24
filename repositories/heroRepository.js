@@ -22,10 +22,17 @@ async function saveHero(heroData) {
     }
 }
 
+// Limpia un objeto héroe para que solo tenga las propiedades válidas
+function limpiarHeroePlano(hero) {
+    const { name, alias, city, team, pets, userId, id } = hero;
+    return { name, alias, city, team, pets, userId, id };
+}
+
 async function saveHeroes(heroesArray) {
     try {
         for (const heroData of heroesArray) {
-            await Hero.updateOne({ id: heroData.id }, heroData, { upsert: true });
+            const cleanHero = limpiarHeroePlano(heroData);
+            await Hero.updateOne({ id: cleanHero.id }, cleanHero, { upsert: true });
         }
         await syncHeroesJson();
         return true;
