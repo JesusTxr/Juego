@@ -47,7 +47,7 @@ function limpiarHeroe(hero) {
 // GET /heroes (protegido)
 router.get('/heroes', authMiddleware, async (req, res) => {
     try {
-        const heroes = await Hero.find({ userId: req.user.userId });
+        const heroes = await Hero.find({ userId: Number(req.user.id) });
         const cleanHeroes = heroes.map(limpiarHeroe);
         res.json(cleanHeroes);
     } catch (error) {
@@ -99,7 +99,7 @@ router.post('/heroes', authMiddleware, [
         const lastHero = await Hero.findOne().sort({ id: -1 });
         const nextId = lastHero && lastHero.id ? lastHero.id + 1 : 1;
         const { name, alias, city, team } = req.body;
-        const newHero = new Hero({ name, alias, city, team, userId: req.user.userId, id: nextId });
+        const newHero = new Hero({ name, alias, city, team, userId: Number(req.user.id), id: nextId });
         await newHero.save();
         res.status(201).json(limpiarHeroe(newHero));
     } catch (error) {
@@ -149,7 +149,7 @@ router.put('/heroes/:id', authMiddleware, async (req, res) => {
         const heroes = await heroService.getAllHeroes();
         const hero = heroes.find(h => h.id === parseInt(req.params.id));
         if (!hero) return res.status(404).json({ error: 'Superhéroe no encontrado' });
-        if (hero.userId.toString() !== req.user.userId) {
+        if (hero.userId !== Number(req.user.id)) {
             return res.status(403).json({ error: 'No tienes permiso para modificar este superhéroe' });
         }
         Object.assign(hero, req.body);
@@ -188,7 +188,7 @@ router.delete('/heroes/:id', authMiddleware, async (req, res) => {
         const heroes = await heroService.getAllHeroes();
         const hero = heroes.find(h => h.id === parseInt(req.params.id));
         if (!hero) return res.status(404).json({ error: 'Superhéroe no encontrado' });
-        if (hero.userId.toString() !== req.user.userId) {
+        if (hero.userId !== Number(req.user.id)) {
             return res.status(403).json({ error: 'No tienes permiso para eliminar este superhéroe' });
         }
         await heroService.deleteHero(req.params.id);
