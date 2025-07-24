@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 
 async function getHeroes() {
     try {
-        return await Hero.find().populate('pets');
+        return await Hero.find(); // Ya no se puede hacer populate('pets') porque pets es un array de números
     } catch (error) {
         console.error('Error obteniendo los héroes:', error);
         return [];
@@ -36,7 +36,7 @@ async function saveHeroes(heroesArray) {
 }
 
 async function syncHeroesJson() {
-    const allHeroes = await Hero.find().populate('pets');
+    const allHeroes = await Hero.find(); // Ya no se puede hacer populate('pets')
     await fs.writeJson('./data/superheroes.json', allHeroes, { spaces: 2 });
 }
 
