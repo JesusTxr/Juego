@@ -109,7 +109,22 @@ router.get('/adoptions', authMiddleware, async (req, res) => {
  */
 // Proteger el endpoint POST /adoptions para que solo el usuario autenticado pueda crear adopciones propias
 router.post('/adoptions', authMiddleware, [
-    check('petId').isInt().withMessage('El id de la mascota es requerido y debe ser un número')
+    check('petId')
+      .custom(value => {
+        return (
+          typeof value === 'number' ||
+          (typeof value === 'string' && (Number.isInteger(Number(value)) || /^[a-fA-F0-9]{24}$/.test(value)))
+        );
+      })
+      .withMessage('El id de la mascota debe ser un número o un ObjectId válido'),
+    check('heroId')
+      .custom(value => {
+        return (
+          typeof value === 'number' ||
+          (typeof value === 'string' && (Number.isInteger(Number(value)) || /^[a-fA-F0-9]{24}$/.test(value)))
+        );
+      })
+      .withMessage('El id del héroe debe ser un número o un ObjectId válido')
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
