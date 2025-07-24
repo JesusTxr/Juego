@@ -3,6 +3,7 @@ import { check, validationResult } from 'express-validator';
 import petService from '../services/petServices.js';
 import Pet from '../models/petModel.js';
 import jwt from 'jsonwebtoken';
+import heroService from '../services/heroServices.js';
 
 const router = express.Router();
 
@@ -100,7 +101,7 @@ router.post('/pets', authMiddleware, [
         const lastPet = await Pet.findOne().sort({ id: -1 });
         const nextId = lastPet && lastPet.id ? lastPet.id + 1 : 1;
         const { name, animal, superpower } = req.body;
-        const petData = { name, animal, superpower, superheroeId: req.user.id, ownerId: req.user.id, id: nextId };
+        const petData = { name, animal, superpower, superheroeId: req.user.id, id: nextId };
         const addedPet = await petService.addPet(petData);
         // Incluir el _id en la respuesta junto con los demás datos
         const obj = addedPet.toObject ? addedPet.toObject() : addedPet;
@@ -194,16 +195,15 @@ router.put('/pets/:id', authMiddleware, [
 // DELETE /pets/:id (protegido)
 router.delete('/pets/:id', authMiddleware, async (req, res) => {
     try {
-        const pets = await petService.getAllPets();
-        const pet = pets.find(p => p.id === parseInt(req.params.id));
+        const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
         if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para eliminar esta mascota' });
         }
-        await petService.deletePet(req.params.id);
-        res.json({ message: 'Mascota eliminada' });
+        const result = await petService.deletePet(req.params.id);
+        res.json(limpiarMascota(result));
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(404).json({ error: error.message });
     }
 });
 
@@ -231,7 +231,7 @@ router.get('/pets/:id/status', authMiddleware, async (req, res) => {
     try {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.ownerId || pet.ownerId.toString() !== req.user.id) {
+        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para ver esta mascota' });
         }
         petService.aplicarPenalizacionEnfermedadSiEsNecesario(pet);
