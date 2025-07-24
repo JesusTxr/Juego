@@ -52,7 +52,9 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ email, password: hashedPassword, id: nextId });
         await newUser.save();
-        const { _id, __v, password: pw, ...cleanUser } = newUser.toObject();
+        // Solo usar .toObject si existe
+        const userObj = typeof newUser.toObject === 'function' ? newUser.toObject() : newUser;
+        const { _id, __v, password: pw, ...cleanUser } = userObj;
         res.status(201).json(cleanUser);
     } catch (error) {
         res.status(500).json({ error: error.message });
