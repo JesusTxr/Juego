@@ -32,9 +32,16 @@ function authMiddleware(req, res, next) {
 // Utilidad para limpiar héroe
 function limpiarHeroe(hero) {
     if (!hero) return hero;
-    const obj = hero.toObject ? hero.toObject() : hero;
-    const { _id, __v, ...rest } = obj;
-    return rest;
+    // Solo llamar .toObject si es un documento Mongoose real
+    if (typeof hero.toObject === 'function') {
+        const obj = hero.toObject();
+        const { _id, __v, ...rest } = obj;
+        return rest;
+    } else {
+        // Si es un objeto plano, simplemente retorna una copia sin _id ni __v
+        const { _id, __v, ...rest } = hero;
+        return rest;
+    }
 }
 
 // GET /heroes (protegido)
@@ -147,7 +154,8 @@ router.put('/heroes/:id', authMiddleware, async (req, res) => {
         }
         Object.assign(hero, req.body);
         await heroService.updateHero(req.params.id, req.body);
-        res.json(limpiarHeroe(hero));
+        // El objeto hero ya es plano, no necesita limpieza extra
+        res.json(hero);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
