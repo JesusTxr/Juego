@@ -125,7 +125,7 @@ router.post('/adoptions', authMiddleware, [
         
         // Obtener la adopción completa con información del héroe y mascota
         const allAdoptions = await adoptionService.getAllAdoptions();
-        const completeAdoption = allAdoptions.find(a => a.id === addedAdoption.id);
+        const completeAdoption = allAdoptions.find(a => parseInt(a.id) === parseInt(addedAdoption.id));
         
         if (completeAdoption) {
             res.status(201).json(limpiarAdopcion(completeAdoption));
