@@ -160,7 +160,8 @@ router.put('/pets/:id', authMiddleware, [
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (pet.superheroeId && pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
         Object.assign(pet, req.body);
@@ -440,7 +441,8 @@ router.post('/pets/:id/sick', authMiddleware, async (req, res) => {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
         if (!pet.enfermedades.includes(enfermedad)) {
@@ -495,7 +497,8 @@ router.post('/pets/:id/cure', authMiddleware, async (req, res) => {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
         pet.enfermedades = pet.enfermedades.filter(e => e !== enfermedad);
