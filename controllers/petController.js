@@ -156,15 +156,17 @@ router.put('/pets/:id', authMiddleware, [
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const pet = await petService.getPetById(req.params.id);
+        const pets = await petService.getAllPets();
+        const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
         if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
-        const updatedPet = await petService.updatePet(req.params.id, req.body);
-        res.json(limpiarMascota(updatedPet));
+        Object.assign(pet, req.body);
+        await petService.updatePet(req.params.id, req.body);
+        res.json(pet);
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -192,15 +194,16 @@ router.put('/pets/:id', authMiddleware, [
 // DELETE /pets/:id (protegido)
 router.delete('/pets/:id', authMiddleware, async (req, res) => {
     try {
-        const pet = await petService.getPetById(req.params.id);
+        const pets = await petService.getAllPets();
+        const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
         if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para eliminar esta mascota' });
         }
-        const result = await petService.deletePet(req.params.id);
-        res.json(limpiarMascota(result));
+        await petService.deletePet(req.params.id);
+        res.json({ message: 'Mascota eliminada' });
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 

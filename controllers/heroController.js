@@ -139,13 +139,14 @@ router.post('/heroes', authMiddleware, [
 // Proteger PUT /heroes/:id para que solo el dueño pueda modificar
 router.put('/heroes/:id', authMiddleware, async (req, res) => {
     try {
-        const hero = await Hero.findById(req.params.id);
+        const heroes = await heroService.getAllHeroes();
+        const hero = heroes.find(h => h.id === parseInt(req.params.id));
         if (!hero) return res.status(404).json({ error: 'Superhéroe no encontrado' });
         if (hero.userId.toString() !== req.user.userId) {
             return res.status(403).json({ error: 'No tienes permiso para modificar este superhéroe' });
         }
         Object.assign(hero, req.body);
-        await hero.save();
+        await heroService.updateHero(req.params.id, req.body);
         res.json(limpiarHeroe(hero));
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -173,15 +174,19 @@ router.put('/heroes/:id', authMiddleware, async (req, res) => {
  *       404:
  *         description: Héroe no encontrado
  */
-router.delete('/heroes/:id', async (req, res) => {
-    if (isNaN(parseInt(req.params.id))) {
-        return res.status(400).json({ error: 'ID inválido' });
-    }
+// Proteger DELETE /heroes/:id para que solo el dueño pueda eliminar
+router.delete('/heroes/:id', authMiddleware, async (req, res) => {
     try {
-        const result = await heroService.deleteHero(req.params.id);
-        res.json(limpiarHeroe(result));
+        const heroes = await heroService.getAllHeroes();
+        const hero = heroes.find(h => h.id === parseInt(req.params.id));
+        if (!hero) return res.status(404).json({ error: 'Superhéroe no encontrado' });
+        if (hero.userId.toString() !== req.user.userId) {
+            return res.status(403).json({ error: 'No tienes permiso para eliminar este superhéroe' });
+        }
+        await heroService.deleteHero(req.params.id);
+        res.json({ message: 'Superhéroe eliminado' });
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 });
 
