@@ -232,7 +232,7 @@ router.get('/pets/:id/status', authMiddleware, async (req, res) => {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
         const hero = await heroService.getHeroById(pet.superheroeId);
-        if (!hero || hero.userId.toString() !== req.user.userId) {
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para ver esta mascota' });
         }
         petService.aplicarPenalizacionEnfermedadSiEsNecesario(pet);
