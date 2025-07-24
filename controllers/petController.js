@@ -284,7 +284,8 @@ router.post('/pets/:id/activity', authMiddleware, async (req, res) => {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
         petService.aplicarActividad(pet, actividad);
@@ -344,7 +345,8 @@ router.post('/pets/:id/item', authMiddleware, async (req, res) => {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
         
