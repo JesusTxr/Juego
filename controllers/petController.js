@@ -3,6 +3,7 @@ import { check, validationResult } from 'express-validator';
 import petService from '../services/petServices.js';
 import Pet from '../models/petModel.js';
 import jwt from 'jsonwebtoken';
+import heroService from '../services/heroServices.js';
 
 const router = express.Router();
 
@@ -90,7 +91,8 @@ router.get('/pets', authMiddleware, async (req, res) => {
 router.post('/pets', authMiddleware, [
     check('name').not().isEmpty().withMessage('El nombre es requerido'),
     check('animal').not().isEmpty().withMessage('El tipo de animal es requerido'),
-    check('superpower').not().isEmpty().withMessage('El superpoder es requerido')
+    check('superpower').not().isEmpty().withMessage('El superpoder es requerido'),
+    check('heroId').isInt().withMessage('El id del héroe es requerido y debe ser un número')
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -99,10 +101,9 @@ router.post('/pets', authMiddleware, [
     try {
         const lastPet = await Pet.findOne().sort({ id: -1 });
         const nextId = lastPet && lastPet.id ? lastPet.id + 1 : 1;
-        const { name, animal, superpower } = req.body;
-        const petData = { name, animal, superpower, superheroeId: req.user.id, id: nextId };
+        const { name, animal, superpower, heroId } = req.body;
+        const petData = { name, animal, superpower, superheroeId: heroId, id: nextId };
         const addedPet = await petService.addPet(petData);
-        // Incluir el _id en la respuesta junto con los demás datos
         const obj = addedPet.toObject ? addedPet.toObject() : addedPet;
         const { __v, ...rest } = obj;
         res.status(201).json(rest);
@@ -156,10 +157,10 @@ router.put('/pets/:id', authMiddleware, [
         return res.status(400).json({ errors: errors.array() });
     }
     try {
-        const pets = await petService.getAllPets();
-        const pet = pets.find(p => p.id === parseInt(req.params.id));
+        const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.userId) {
             return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
         }
         Object.assign(pet, req.body);
@@ -194,10 +195,10 @@ router.put('/pets/:id', authMiddleware, [
 // DELETE /pets/:id (protegido)
 router.delete('/pets/:id', authMiddleware, async (req, res) => {
     try {
-        const pets = await petService.getAllPets();
-        const pet = pets.find(p => p.id === parseInt(req.params.id));
+        const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.userId) {
             return res.status(403).json({ error: 'No tienes permiso para eliminar esta mascota' });
         }
         await petService.deletePet(req.params.id);
@@ -231,7 +232,8 @@ router.get('/pets/:id/status', authMiddleware, async (req, res) => {
     try {
         const pet = await petService.getPetById(req.params.id);
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        if (!pet.superheroeId || pet.superheroeId.toString() !== req.user.id) {
+        const hero = await heroService.getHeroById(pet.superheroeId);
+        if (!hero || hero.userId.toString() !== req.user.userId) {
             return res.status(403).json({ error: 'No tienes permiso para ver esta mascota' });
         }
         petService.aplicarPenalizacionEnfermedadSiEsNecesario(pet);
