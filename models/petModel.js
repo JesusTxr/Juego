@@ -4,7 +4,7 @@ const petSchema = new mongoose.Schema({
   name: { type: String, required: true },
   animal: String,
   superpower: String,
-  superheroeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hero' },
+  superheroeId: { type: Number },
   felicidad: { type: Number, default: 100 },
   vida: { type: Number, default: 100 },
   personalidad: { type: String, default: 'feliz' },

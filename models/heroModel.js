@@ -5,8 +5,8 @@ const heroSchema = new mongoose.Schema({
   alias: String,
   city: String,
   team: String,
-  pets: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], // Relación con mascotas
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Dueño del superhéroe
+  pets: [{ type: Number }], // Relación con mascotas
+  userId: { type: Number, required: true }, // Dueño del superhéroe
   id: { type: Number, unique: true },
 });
 
