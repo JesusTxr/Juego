@@ -68,5 +68,6 @@ if (!config.JWT_SECRET) {
 const PORT = config.PORT;
 app.listen(PORT, _ => {
     console.log(`Servidor corriendo en el puerto ${PORT}`)
-    console.log(`🚀 Servidor corriendo en: http://localhost:${PORT}/api-docs/swagger`);
+    console.log(`🚀 API Docs: http://localhost:${PORT}/api-docs/swagger`);
+    console.log(`🎮 Juego: http://localhost:${PORT}/game`);
 })
