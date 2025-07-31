@@ -61,10 +61,15 @@ app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
 
+// Endpoint de prueba para verificar que la API funciona
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API funcionando correctamente', timestamp: new Date().toISOString() });
+});
+
 if (!config.JWT_SECRET) {
   console.warn('ADVERTENCIA: JWT_SECRET no está definida. Usando valor por defecto.');
 }
-
+//Jesus Torres
 const PORT = config.PORT;
 app.listen(PORT, _ => {
     console.log(`Servidor corriendo en el puerto ${PORT}`)

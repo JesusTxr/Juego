@@ -37,17 +37,28 @@ function initializeGame() {
 
 function setupEventListeners() {
   // Auth form
-  document.getElementById("authForm").addEventListener("submit", handleAuth)
+  const authForm = document.getElementById("authForm")
+  if (authForm) {
+    authForm.addEventListener("submit", handleAuth)
+  }
 
   // Pet type change
-  document.getElementById("petType").addEventListener("change", updatePetPreview)
-  document.getElementById("petPower").addEventListener("change", updatePetPreview)
-  document.getElementById("petName").addEventListener("input", updatePetPreview)
+  const petType = document.getElementById("petType")
+  const petPower = document.getElementById("petPower")
+  const petName = document.getElementById("petName")
+  
+  if (petType) petType.addEventListener("change", updatePetPreview)
+  if (petPower) petPower.addEventListener("change", updatePetPreview)
+  if (petName) petName.addEventListener("input", updatePetPreview)
 
   // Hero preview
-  document.getElementById("heroName").addEventListener("input", updateHeroPreview)
-  document.getElementById("heroAlias").addEventListener("input", updateHeroPreview)
-  document.getElementById("heroColor").addEventListener("change", updateHeroPreview)
+  const heroName = document.getElementById("heroName")
+  const heroAlias = document.getElementById("heroAlias")
+  const heroColor = document.getElementById("heroColor")
+  
+  if (heroName) heroName.addEventListener("input", updateHeroPreview)
+  if (heroAlias) heroAlias.addEventListener("input", updateHeroPreview)
+  if (heroColor) heroColor.addEventListener("change", updateHeroPreview)
 }
 
 // Authentication
