@@ -5,9 +5,16 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
+    "start:dev": "NODE_ENV=development node app.js",
     "dev": "nodemon app.js",
     "init": "node scripts/initGame.js",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "config": {
+    "production": false
   },
   "keywords": [],
   "author": "",
