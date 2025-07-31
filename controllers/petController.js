@@ -280,20 +280,89 @@ router.get('/pets/:id/status', authMiddleware, async (req, res) => {
  */
 // POST /pets/:id/activity
 router.post('/pets/:id/activity', authMiddleware, async (req, res) => {
-    const { actividad } = req.body;
+    const { actividad, effects } = req.body;
     if (!actividad) return res.status(400).json({ error: 'Actividad requerida' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        const hero = await heroService.getHeroById(pet.superheroeId);
-        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
-            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        
+        // Initialize pet stats if they don't exist
+        pet.felicidad = pet.felicidad || 100;
+        pet.vida = pet.vida || 100;
+        pet.hambre = pet.hambre || 0;
+        
+        // Check for activity cooldown (prevent spam)
+        const now = Date.now();
+        const lastActivity = pet.lastActivity || {};
+        const cooldownTime = 5000; // 5 seconds cooldown
+        
+        if (lastActivity[actividad] && (now - lastActivity[actividad]) < cooldownTime) {
+            return res.status(429).json({ 
+                error: 'Espera un poco antes de hacer esta actividad de nuevo',
+                cooldown: cooldownTime - (now - lastActivity[actividad])
+            });
         }
-        petService.aplicarActividad(pet, actividad);
+        
+        // Update last activity time
+        pet.lastActivity = pet.lastActivity || {};
+        pet.lastActivity[actividad] = now;
+        
+        // Apply base effects to pet stats
+        if (effects) {
+            if (effects.happiness !== undefined) {
+                pet.felicidad = Math.max(0, Math.min(100, pet.felicidad + effects.happiness));
+            }
+            if (effects.health !== undefined) {
+                pet.vida = Math.max(0, Math.min(100, pet.vida + effects.health));
+            }
+            if (effects.hunger !== undefined) {
+                pet.hambre = Math.max(0, Math.min(100, pet.hambre + effects.hunger));
+            }
+        }
+        
+        // Apply activity-specific logic for negative effects
+        switch (actividad) {
+            case 'alimentar':
+                // Overfeeding can cause health issues
+                if (pet.hambre < 20) {
+                    pet.vida = Math.max(0, pet.vida - 5);
+                    pet.felicidad = Math.max(0, pet.felicidad - 10);
+                }
+                break;
+            case 'pasear':
+                // Over-exercising can cause fatigue
+                if (pet.felicidad > 80 && pet.vida < 50) {
+                    pet.felicidad = Math.max(0, pet.felicidad - 15);
+                }
+                break;
+            case 'bañar':
+                // Over-bathing can cause stress
+                if (pet.felicidad > 90) {
+                    pet.felicidad = Math.max(0, pet.felicidad - 5);
+                }
+                break;
+            case 'jugar':
+                // Over-playing can cause exhaustion
+                if (pet.felicidad > 85 && pet.vida < 60) {
+                    pet.vida = Math.max(0, pet.vida - 8);
+                    pet.felicidad = Math.max(0, pet.felicidad - 12);
+                }
+                break;
+        }
+        
+        // Natural stat decay over time
+        // This simulates the pet getting hungry and less happy over time
+        pet.hambre = Math.min(100, pet.hambre + 2);
+        if (pet.hambre > 70) {
+            pet.felicidad = Math.max(0, pet.felicidad - 1);
+        }
+        
+        // Update pet in database
         await petService.updatePet(pet.id, pet);
-        res.json(limpiarMascota(pet));
+        res.json({ pet: limpiarMascota(pet) });
     } catch (error) {
+        console.error('Error in activity endpoint:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -341,29 +410,44 @@ router.post('/pets/:id/activity', authMiddleware, async (req, res) => {
  */
 // POST /pets/:id/item
 router.post('/pets/:id/item', authMiddleware, async (req, res) => {
-    const { item } = req.body;
-    if (!item) return res.status(400).json({ error: 'Ítem requerido' });
+    const { itemType, cost } = req.body;
+    if (!itemType) return res.status(400).json({ error: 'Tipo de ítem requerido' });
     try {
         const pets = await petService.getAllPets();
         const pet = pets.find(p => p.id === parseInt(req.params.id));
         if (!pet) return res.status(404).json({ error: 'Mascota no encontrada' });
-        const hero = await heroService.getHeroById(pet.superheroeId);
-        if (!hero || hero.userId.toString() !== req.user.id.toString()) {
-            return res.status(403).json({ error: 'No tienes permiso para modificar esta mascota' });
+        
+        // Define item effects based on itemType
+        const itemEffects = {
+            comida_basica: { felicidad: 10, hambre: -20 },
+            agua: { vida: 5, felicidad: 5 },
+            gafas_neon: { felicidad: 15, vida: 5 },
+            capa_roja: { felicidad: 25, vida: 10 },
+            sombrero_magico: { felicidad: 30, vida: 15 }
+        };
+        
+        const effects = itemEffects[itemType] || {};
+        
+        // Apply effects to pet
+        if (effects.felicidad) {
+            pet.felicidad = Math.max(0, Math.min(100, (pet.felicidad || 100) + effects.felicidad));
+        }
+        if (effects.vida) {
+            pet.vida = Math.max(0, Math.min(100, (pet.vida || 100) + effects.vida));
+        }
+        if (effects.hambre !== undefined) {
+            pet.hambre = Math.max(0, Math.min(100, (pet.hambre || 0) + effects.hambre));
         }
         
-        // Convertir el objeto item a string
-        const itemString = `${item.nombre} - ${item.tipo} - ${item.efecto}`;
+        // Add item to pet's inventory
+        const itemString = `${itemType} - ${new Date().toISOString()}`;
+        if (!pet.items) pet.items = [];
         pet.items.push(itemString);
         
-        if (item.efecto === 'curar') {
-            pet.enfermedades = [];
-        } else if (item.efecto === 'felicidad') {
-            pet.felicidad = Math.min(100, pet.felicidad + 20);
-        }
         await petService.updatePet(pet.id, pet);
-        res.json(limpiarMascota(pet));
+        res.json({ pet: limpiarMascota(pet) });
     } catch (error) {
+        console.error('Error in item endpoint:', error);
         res.status(500).json({ error: error.message });
     }
 });

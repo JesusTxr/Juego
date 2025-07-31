@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
+import { config } from '../config.js';
 
 const router = express.Router();
 
@@ -52,10 +53,17 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ email, password: hashedPassword, id: nextId });
         await newUser.save();
+        // Generar token para el nuevo usuario
+        const token = jwt.sign({ 
+            id: newUser.id, 
+            email: newUser.email,
+            sessionId: Date.now() + Math.random().toString(36).substr(2, 9)
+        }, config.JWT_SECRET, { expiresIn: '24h' });
+        
         // Solo usar .toObject si existe
         const userObj = typeof newUser.toObject === 'function' ? newUser.toObject() : newUser;
         const { _id, __v, password: pw, ...cleanUser } = userObj;
-        res.status(201).json(cleanUser);
+        res.status(201).json({ token, user: cleanUser });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -115,11 +123,59 @@ router.post('/login', async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ error: 'Contraseña incorrecta' });
         }
-        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token });
+        const token = jwt.sign({ 
+            id: user.id, 
+            email: user.email,
+            sessionId: Date.now() + Math.random().toString(36).substr(2, 9)
+        }, config.JWT_SECRET, { expiresIn: '24h' });
+        const userObj = typeof user.toObject === 'function' ? user.toObject() : user;
+        const { _id, __v, password: userPassword, ...cleanUser } = userObj;
+        res.json({ token, user: cleanUser });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
+
+/**
+ * @swagger
+ * /users/profile:
+ *   get:
+ *     summary: Obtiene el perfil del usuario autenticado
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil del usuario
+ *       401:
+ *         description: No autorizado
+ */
+// Obtener perfil del usuario
+router.get('/profile', authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findOne({ id: req.user.id });
+        if (!user) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        
+        const userObj = typeof user.toObject === 'function' ? user.toObject() : user;
+        const { _id, __v, password, ...cleanUser } = userObj;
+        res.json(cleanUser);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Middleware para verificar JWT
+function authMiddleware(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Token no proporcionado' });
+    jwt.verify(token, config.JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Token inválido' });
+        req.user = user;
+        next();
+    });
+}
 
 export default router; 

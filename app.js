@@ -9,9 +9,15 @@ import userController from './controllers/userController.js';
 import { swaggerUiServe, swaggerUiSetup } from './swagger.js';
 import { swaggerSpec } from './swagger.js';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { config } from './config.js';
 
-mongoose.connect(process.env.MONGODB_URI)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+console.log('MONGODB_URI:', config.MONGODB_URI);
+mongoose.connect(config.MONGODB_URI)
 .then(() => console.log('Conectado a MongoDB Atlas'))
 .catch(err => console.error('Error de conexión a MongoDB:', err));
 
@@ -37,6 +43,14 @@ app.use('/api', adoptionController)
 app.use('/api/users', userController);
 app.use('/api-docs', swaggerUiServe, swaggerUiSetup);
 
+// Servir archivos estáticos del frontend
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Ruta para el juego
+app.get('/game', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Endpoint para obtener el archivo JSON de Swagger
 app.get('/swagger.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
@@ -47,11 +61,11 @@ app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
 
-if (!process.env.JWT_SECRET) {
-  console.warn('ADVERTENCIA: JWT_SECRET no está definida en el archivo .env. Por favor, agrégala para la autenticación JWT.');
+if (!config.JWT_SECRET) {
+  console.warn('ADVERTENCIA: JWT_SECRET no está definida. Usando valor por defecto.');
 }
 
-const PORT = process.env.PORT || 3001;
+const PORT = config.PORT;
 app.listen(PORT, _ => {
     console.log(`Servidor corriendo en el puerto ${PORT}`)
     console.log(`🚀 Servidor corriendo en: http://localhost:${PORT}/api-docs/swagger`);
